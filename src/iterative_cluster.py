@@ -185,6 +185,7 @@ def prune_descriptions(
         ) or num_clusters_covered > max_cluster_fraction * len(
             text_descriptions_matching
         ):
+            print(f"Drop {i} because it cover {num_clusters_covered} from {len(text_descriptions_matching)}")
             descriptions_index_to_remove.append(i)
     print(
         f"Dropping {len(descriptions_index_to_remove)} descriptions because they are too popular or too unpopular:"
@@ -567,10 +568,14 @@ def run(
         selected_text_descriptions_matching = pruned_text_descriptions_matching[
             :, selected_description_idxes_
         ]
-        unselected_text_indicators = (
-            np.max(selected_text_descriptions_matching, axis=1) == 0
-        )
-
+        try:
+            unselected_text_indicators = (
+                np.max(selected_text_descriptions_matching, axis=1) == 0
+            )
+        except Exception as e:
+            print("Selected Text Descriptions Matching")
+            print(selected_text_descriptions_matching)
+            raise e
         # force assign texts to one cluster
         cluster_assignment = np.ones(n, dtype=np.int64) * -1
         cluster_assignment[~unselected_text_indicators] = np.argmax(
