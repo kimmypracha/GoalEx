@@ -14,7 +14,6 @@ from vllm.sampling_params import SamplingParams
 from vllm.utils import random_uuid
 import os
 
-# os.environ['HUGGING_FACE_HUB_TOKEN'] = "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" # For debugging only
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MAX_TARGET_LENGTH = 2
 YES_NO_TOK_IDX = [150, 4273]
