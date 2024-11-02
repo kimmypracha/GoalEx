@@ -1,0 +1,11 @@
+Assigning: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1930/1930 [3:13:50<00:00,  6.03s/it]
+Traceback (most recent call last):
+  File "/data/ppromthaw/GoalEx/src/iterative_cluster.py", line 704, in <module>
+    cluster_result = run(
+  File "/data/ppromthaw/GoalEx/src/iterative_cluster.py", line 571, in run
+    np.max(selected_text_descriptions_matching, axis=1) == 0
+  File "/data/ppromthaw/miniconda3/envs/goalex/lib/python3.10/site-packages/numpy/core/fromnumeric.py", line 2810, in max
+    return _wrapreduction(a, np.maximum, 'max', axis, None, out,
+  File "/data/ppromthaw/miniconda3/envs/goalex/lib/python3.10/site-packages/numpy/core/fromnumeric.py", line 88, in _wrapreduction
+    return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+ValueError: zero-size array to reduction operation maximum which has no identity

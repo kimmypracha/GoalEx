@@ -1,0 +1,154 @@
+Here's a rough estimate of the cost; it might not be accurate and we are not responsible for any cost incurred.
+Each round costs 0.00, proposer spending 0.00, assigner spending 0.00. The final assignment costs 0.00.
+Total cost is 0.02
+Do you want to continue? (y/n)INFO 10-30 15:12:10 config.py:1636] For Gemma 2, we downcast float32 to bfloat16 instead of float16 by default. Please specify `dtype` if you want to use float16.
+INFO 10-30 15:12:10 config.py:1664] Downcasting torch.float32 to torch.bfloat16.
+WARNING 10-30 15:12:10 config.py:185] gemma2 has interleaved attention, which is currently not supported by vLLM. Disabling sliding window and capping the max length to the sliding window size (4096).
+INFO 10-30 15:12:27 llm_engine.py:237] Initializing an LLM engine (v0.6.3.post1) with config: model='google/gemma-2-2b', speculative_config=None, tokenizer='google/gemma-2-2b', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, rope_scaling=None, rope_theta=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto, quantization_param_path=None, device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='outlines'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=google/gemma-2-2b, num_scheduler_steps=1, chunked_prefill_enabled=False multi_step_stream_outputs=True, enable_prefix_caching=False, use_async_output_proc=True, use_cached_outputs=False, mm_processor_kwargs=None)
+INFO 10-30 15:12:32 model_runner.py:1056] Starting to load model google/gemma-2-2b...
+INFO 10-30 15:12:33 weight_utils.py:243] Using model weights format ['*.safetensors']
+INFO 10-30 15:13:20 model_runner.py:1067] Loading model weights took 4.8999 GB
+INFO 10-30 15:13:27 gpu_executor.py:122] # GPU blocks: 22076, # CPU blocks: 2520
+INFO 10-30 15:13:27 gpu_executor.py:126] Maximum concurrency for 4096 tokens per request: 86.23x
+INFO 10-30 15:13:37 model_runner.py:1395] Capturing the model for CUDA graphs. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI.
+INFO 10-30 15:13:37 model_runner.py:1399] CUDA graphs can take additional 1~3 GiB memory per GPU. If you are running out of memory, consider decreasing `gpu_memory_utilization` or enforcing eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+INFO 10-30 15:14:30 model_runner.py:1523] Graph capturing finished in 53 secs.
+WARNING 10-30 15:14:31 sampling_params.py:299] temperature 0.001 is less than 0.01, which may cause numerical errors nan or inf in tensors. We have maxed it out to 0.01.
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Bayesian Approach to Neuro-Rough Models
+1. Analyzing covert social network foundation behind terrorism disaster
+2. Ensemble Learning for Free with Evolutionary Algorithms ?
+3. On-Line Condition Monitoring using Computational Intelligence
+4. Soft constraint abstraction based on semiring homomorphism
+5. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+6. Using RDF to Model the Structure and Process of Systems
+7. Toward Psycho-robots
+8. Decomposition During Search for Propagation-Based Constraint Solvers
+9. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+10. Robust Multi-Cellular Developmental Design
+11. Learning to Bluff
+12. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+13. A study of structural properties on profiles HMMs
+14. Evolving localizations in reaction-diffusion cellular automata
+15. Qualitative Belief Conditioning Rules (QBCR)
+16. Calculating Valid Domains for BDD-Based Interactive Configuration
+17. Tests of Machine Intelligence
+18. The Road to Quantum Artificial Intelligence
+19. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+20. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+21. Le terme et le concept : fondements d'une ontoterminologie
+22. Truecluster matching
+23. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+24. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+25. Measuring the Evolvability Landscape to study Neutrality
+26. Lagrangian Relaxation for MAP Estimation in Graphical Models
+27. Universal Intelligence: A Definition of Machine Intelligence
+28. Automatically Restructuring Practice Guidelines using the GEM DTD
+29. Node discovery problem for a social network
+30. A Collection of Definitions of Intelligence
+31. Evolving Symbolic Controllers
+32. Predicting relevant empty spots in social interaction
+33. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+34. Modeling Computations in a Semantic Network
+35. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+36. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+37. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+38. Local search heuristics: Fitness Cloud versus Fitness Landscape
+39. Artificial Intelligence for Conflict Management
+40. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+41. Stream Computing
+42. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+43. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+44. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+45. Temporal Reasoning without Transitive Tables
+46. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+47. Anisotropic selection in cellular genetic algorithms
+48. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+49. Bayesian approach to rough set
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of neuro-rough models"\n- "has a topic of social network foundation behind terrorism disaster"\n- "has a topic of ensemble learning with evolutionary algorithms"\n- "has a topic of online condition monitoring using computational intelligence"\n- "has a topic of soft constraint abstraction based on semiring homomorphism"\n- "has a topic of fitness landscape in cellular automata"\n- "has a topic of RDF modeling of systems"\n- "has a topic of psycho-robots"\n- "has a topic of mixed integer linear programming in decentralized POMDPs"\n- "has a topic of multi-cellular developmental design"\n- "has a topic of bluffing strategies"\n- "has a topic of expected utilities convergence with algorithmic probability distributions"\n- "has a topic of structural properties in profiles HMMs"\n- "has a topic of evolving localizations in reaction-diffusion cellular automata"\n- "has a topic of qualitative belief conditioning rules"\n- "has a topic of BDD-based interactive configuration"\n- "has a topic of machine intelligence testing"\n- "has a topic of quantum artificial intelligence"\n- "has a topic of linguistic platform for web content analysis"\n- "has a topic of leaf recognition algorithm for plant classification"\n- "has a topic of ontoterminology foundations"\n- "has a topic of cluster matching"\n- "has a topic of robustness in neural-network systems for face recognition"\n- "has a topic of fuzzy Artmap and neural network approach to processing with missing values"\n- "has a topic of evolvability landscape study"\n- "has a topic of Lagrangian relaxation for MAP estimation in graphical models"\n- "has a topic of universal machine intelligence definition"\n- "has a topic of practice guidelines restructuring using GEM DTD"\n- "has a topic of node discovery in social networks"\n- "has a topic of intelligence definitions collection"\n- "has a topic of symbolic controllers evolution"\n- "has a topic of predicting empty spots in social interaction"\n- "has a topic of OWL and Semantic Web rules translation into Prolog"\n- "has a topic of computations modeling in a semantic network"\n- "has a topic of time complexity analysis flaws in A*"\n- "has a topic of AI history and outlook"\n- "has a topic of structured documents from texts"\n- "has a topic of local search heuristics in fitness cloud and landscape"\n- "has a topic of conflict management in artificial intelligence"\n- "has a topic of response prediction in structural systems to earthquakes"\n- "has a topic of stream computing"\n- "has a topic of fault classification in cylinders using MLPS, SVMs, and GMMs"\n- "has a topic of scientific simulations future from artificial life to artificial cosmogenesis"\n- "has a topic of qualitative beliefs enrichment for uncertainty reasoning"\n- "has a topic of temporal reasoning without transitive tables"\n- "has a topic of water demand time series forecasting with ANNs and SVMs"\n- "has a topic of anisotropic selection in cellular genetic algorithms"\n- "has a topic of fault classification using pseudomodal energies and neuro-fuzzy modeling"\n- "has a topic of Bayesian approach to rough set"']
+10 descriptions proposed in total. Here are the descriptions:
+has a topic of online condition monitoring using computational intelligence
+has a topic of ensemble learning with evolutionary algorithms
+- "has a topic of neuro-rough models
+has a topic of computational intelligence
+has a topic of machine learning
+has a topic of evolutionary algorithms
+has a topic of social network foundation behind terrorism disaster
+has a topic of RDF modeling of systems
+has a topic of psycho-robots
+has a topic of soft constraint abstraction based on semiring homomorphism
+Stage Assign assign
+Assigned all recall: 1.0
+Assigned all precision: 0.0
+Assigned description: has a topic of online condition monitoring using computational intelligence. recall: 0.98 precision: 0.0
+Assigned description: has a topic of ensemble learning with evolutionary algorithms. recall: 0.995 precision: 0.0
+Assigned description: - "has a topic of neuro-rough models. recall: 1.0 precision: 0.0
+Assigned description: has a topic of computational intelligence. recall: 1.0 precision: 0.0
+Assigned description: has a topic of machine learning. recall: 1.0 precision: 0.0
+Assigned description: has a topic of evolutionary algorithms. recall: 0.989 precision: 0.0
+Assigned description: has a topic of social network foundation behind terrorism disaster. recall: 0.974 precision: 0.0
+Assigned description: has a topic of RDF modeling of systems. recall: 1.0 precision: 0.0
+Assigned description: has a topic of psycho-robots. recall: 1.0 precision: 0.0
+Assigned description: has a topic of soft constraint abstraction based on semiring homomorphism. recall: 0.986 precision: 0.0
+Drop 0 because it cover 980 from 1000
+Drop 1 because it cover 995 from 1000
+Drop 2 because it cover 1000 from 1000
+Drop 3 because it cover 1000 from 1000
+Drop 4 because it cover 1000 from 1000
+Drop 5 because it cover 989 from 1000
+Drop 6 because it cover 974 from 1000
+Drop 7 because it cover 1000 from 1000
+Drop 8 because it cover 1000 from 1000
+Drop 9 because it cover 986 from 1000
+Dropping 10 descriptions because they are too popular or too unpopular:
+Selected Text Descriptions Matching
+[]

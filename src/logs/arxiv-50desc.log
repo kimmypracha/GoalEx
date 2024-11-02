@@ -1,0 +1,2100 @@
+Here's a rough estimate of the cost; it might not be accurate and we are not responsible for any cost incurred.
+Each round costs 0.02, proposer spending 0.02, assigner spending 0.00. The final assignment costs 0.00.
+Total cost is 0.08
+Do you want to continue? (y/n)INFO 10-30 15:31:50 config.py:1636] For Gemma 2, we downcast float32 to bfloat16 instead of float16 by default. Please specify `dtype` if you want to use float16.
+INFO 10-30 15:31:50 config.py:1664] Downcasting torch.float32 to torch.bfloat16.
+WARNING 10-30 15:31:50 config.py:185] gemma2 has interleaved attention, which is currently not supported by vLLM. Disabling sliding window and capping the max length to the sliding window size (4096).
+INFO 10-30 15:31:54 llm_engine.py:237] Initializing an LLM engine (v0.6.3.post1) with config: model='google/gemma-2-2b', speculative_config=None, tokenizer='google/gemma-2-2b', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config=None, rope_scaling=None, rope_theta=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=4096, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto, quantization_param_path=None, device_config=cuda, decoding_config=DecodingConfig(guided_decoding_backend='outlines'), observability_config=ObservabilityConfig(otlp_traces_endpoint=None, collect_model_forward_time=False, collect_model_execute_time=False), seed=0, served_model_name=google/gemma-2-2b, num_scheduler_steps=1, chunked_prefill_enabled=False multi_step_stream_outputs=True, enable_prefix_caching=False, use_async_output_proc=True, use_cached_outputs=False, mm_processor_kwargs=None)
+INFO 10-30 15:31:58 model_runner.py:1056] Starting to load model google/gemma-2-2b...
+INFO 10-30 15:31:59 weight_utils.py:243] Using model weights format ['*.safetensors']
+INFO 10-30 15:32:23 model_runner.py:1067] Loading model weights took 4.8999 GB
+INFO 10-30 15:32:30 gpu_executor.py:122] # GPU blocks: 22076, # CPU blocks: 2520
+INFO 10-30 15:32:30 gpu_executor.py:126] Maximum concurrency for 4096 tokens per request: 86.23x
+INFO 10-30 15:32:41 model_runner.py:1395] Capturing the model for CUDA graphs. This may lead to unexpected consequences if the model is not static. To run the model in eager mode, set 'enforce_eager=True' or use '--enforce-eager' in the CLI.
+INFO 10-30 15:32:41 model_runner.py:1399] CUDA graphs can take additional 1~3 GiB memory per GPU. If you are running out of memory, consider decreasing `gpu_memory_utilization` or enforcing eager mode. You can also reduce the `max_num_seqs` as needed to decrease memory usage.
+INFO 10-30 15:33:22 model_runner.py:1523] Graph capturing finished in 41 secs.
+WARNING 10-30 15:33:22 sampling_params.py:299] temperature 0.001 is less than 0.01, which may cause numerical errors nan or inf in tensors. We have maxed it out to 0.01.
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Bayesian Approach to Neuro-Rough Models
+1. Analyzing covert social network foundation behind terrorism disaster
+2. Ensemble Learning for Free with Evolutionary Algorithms ?
+3. On-Line Condition Monitoring using Computational Intelligence
+4. Soft constraint abstraction based on semiring homomorphism
+5. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+6. Using RDF to Model the Structure and Process of Systems
+7. Toward Psycho-robots
+8. Decomposition During Search for Propagation-Based Constraint Solvers
+9. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+10. Robust Multi-Cellular Developmental Design
+11. Learning to Bluff
+12. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+13. A study of structural properties on profiles HMMs
+14. Evolving localizations in reaction-diffusion cellular automata
+15. Qualitative Belief Conditioning Rules (QBCR)
+16. Calculating Valid Domains for BDD-Based Interactive Configuration
+17. Tests of Machine Intelligence
+18. The Road to Quantum Artificial Intelligence
+19. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+20. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+21. Le terme et le concept : fondements d'une ontoterminologie
+22. Truecluster matching
+23. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+24. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+25. Measuring the Evolvability Landscape to study Neutrality
+26. Lagrangian Relaxation for MAP Estimation in Graphical Models
+27. Universal Intelligence: A Definition of Machine Intelligence
+28. Automatically Restructuring Practice Guidelines using the GEM DTD
+29. Node discovery problem for a social network
+30. A Collection of Definitions of Intelligence
+31. Evolving Symbolic Controllers
+32. Predicting relevant empty spots in social interaction
+33. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+34. Modeling Computations in a Semantic Network
+35. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+36. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+37. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+38. Local search heuristics: Fitness Cloud versus Fitness Landscape
+39. Artificial Intelligence for Conflict Management
+40. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+41. Stream Computing
+42. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+43. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+44. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+45. Temporal Reasoning without Transitive Tables
+46. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+47. Anisotropic selection in cellular genetic algorithms
+48. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+49. Bayesian approach to rough set
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of neuro-rough models"\n- "has a topic of social network foundation behind terrorism disaster"\n- "has a topic of ensemble learning with evolutionary algorithms"\n- "has a topic of online condition monitoring using computational intelligence"\n- "has a topic of soft constraint abstraction based on semiring homomorphism"\n- "has a topic of fitness landscape in cellular automata"\n- "has a topic of RDF modeling of systems"\n- "has a topic of psycho-robots"\n- "has a topic of mixed integer linear programming in decentralized POMDPs"\n- "has a topic of robust multi-cellular developmental design"\n- "has a topic of bluffing strategies"\n- "has a topic of expected utilities convergence with algorithmic probability distributions"\n- "has a topic of structural properties in profiles HMMs"\n- "has a topic of evolving localizations in reaction-diffusion cellular automata"\n- "has a topic of qualitative belief conditioning rules"\n- "has a topic of BDD-based interactive configuration"\n- "has a topic of machine intelligence testing"\n- "has a topic of quantum artificial intelligence"\n- "has a topic of linguistic platform for web content analysis"\n- "has a topic of leaf recognition algorithm for plant classification"\n- "has a topic of ontoterminology foundations"\n- "has a topic of cluster matching"\n- "has a topic of robustness in neural-network systems for face recognition"\n- "has a topic of fuzzy Artmap and neural network approach to processing with missing values"\n- "has a topic of evolvability landscape study"\n- "has a topic of Lagrangian relaxation for MAP estimation in graphical models"\n- "has a topic of universal intelligence definition"\n- "has a topic of practice guidelines restructuring using GEM DTD"\n- "has a topic of node discovery in social networks"\n- "has a topic of intelligence definitions collection"\n- "has a topic of symbolic controllers evolution"\n- "has a topic of predicting empty spots in social interaction"\n- "has a topic of OWL and Semantic Web rules translation into Prolog"\n- "has a topic of computations modeling in a semantic network"\n- "has a topic of time complexity analysis flaws in A*"\n- "has a topic of AI history and outlook"\n- "has a topic of structured documents from texts"\n- "has a topic of fitness cloud versus fitness landscape in local search heuristics"\n- "has a topic of AI for conflict management"\n- "has a topic of response prediction in structural systems"\n- "has a topic of stream computing"\n- "has a topic of fault classification in cylinders using MLPS, SVMs, and GMMs"\n- "has a topic of future of scientific simulations from artificial life to artificial cosmogenesis"\n- "has a topic of qualitative beliefs enrichment for uncertainty reasoning"\n- "has a topic of temporal reasoning without transitive tables"\n- "has a topic of neural networks and SVMs for water demand forecasting"\n- "has a topic of anisotropic selection in cellular genetic algorithms"\n- "has a topic of fault classification using pseudomodal energies and neuro-fuzzy modeling"\n- "has a topic of Bayesian approach to rough set"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+1. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+2. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+3. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+4. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+5. Universal Intelligence: A Definition of Machine Intelligence
+6. Modeling Computations in a Semantic Network
+7. On-Line Condition Monitoring using Computational Intelligence
+8. Predicting relevant empty spots in social interaction
+9. Robust Multi-Cellular Developmental Design
+10. Decomposition During Search for Propagation-Based Constraint Solvers
+11. Bayesian approach to rough set
+12. Node discovery problem for a social network
+13. Le terme et le concept : fondements d'une ontoterminologie
+14. Qualitative Belief Conditioning Rules (QBCR)
+15. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+16. Local search heuristics: Fitness Cloud versus Fitness Landscape
+17. Stream Computing
+18. Using RDF to Model the Structure and Process of Systems
+19. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+20. Bayesian Approach to Neuro-Rough Models
+21. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+22. A study of structural properties on profiles HMMs
+23. Calculating Valid Domains for BDD-Based Interactive Configuration
+24. Artificial Intelligence for Conflict Management
+25. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+26. Analyzing covert social network foundation behind terrorism disaster
+27. Evolving Symbolic Controllers
+28. Evolving localizations in reaction-diffusion cellular automata
+29. Toward Psycho-robots
+30. Anisotropic selection in cellular genetic algorithms
+31. The Road to Quantum Artificial Intelligence
+32. Tests of Machine Intelligence
+33. Soft constraint abstraction based on semiring homomorphism
+34. Automatically Restructuring Practice Guidelines using the GEM DTD
+35. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+36. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+37. Truecluster matching
+38. Temporal Reasoning without Transitive Tables
+39. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+40. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+41. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+42. A Collection of Definitions of Intelligence
+43. Ensemble Learning for Free with Evolutionary Algorithms ?
+44. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+45. Learning to Bluff
+46. Lagrangian Relaxation for MAP Estimation in Graphical Models
+47. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+48. Measuring the Evolvability Landscape to study Neutrality
+49. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"- "has a topic of artificial intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of neural networks"\n- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of computational intelligence"\n- "has a topic of evolutionary algorithms"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+1. Node discovery problem for a social network
+2. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+3. Bayesian Approach to Neuro-Rough Models
+4. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+5. Predicting relevant empty spots in social interaction
+6. Toward Psycho-robots
+7. Evolving localizations in reaction-diffusion cellular automata
+8. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+9. Ensemble Learning for Free with Evolutionary Algorithms ?
+10. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+11. Calculating Valid Domains for BDD-Based Interactive Configuration
+12. Tests of Machine Intelligence
+13. On-Line Condition Monitoring using Computational Intelligence
+14. Lagrangian Relaxation for MAP Estimation in Graphical Models
+15. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+16. Evolving Symbolic Controllers
+17. Decomposition During Search for Propagation-Based Constraint Solvers
+18. Local search heuristics: Fitness Cloud versus Fitness Landscape
+19. Measuring the Evolvability Landscape to study Neutrality
+20. Automatically Restructuring Practice Guidelines using the GEM DTD
+21. Qualitative Belief Conditioning Rules (QBCR)
+22. Universal Intelligence: A Definition of Machine Intelligence
+23. Soft constraint abstraction based on semiring homomorphism
+24. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+25. Using RDF to Model the Structure and Process of Systems
+26. Analyzing covert social network foundation behind terrorism disaster
+27. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+28. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+29. Bayesian approach to rough set
+30. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+31. Truecluster matching
+32. A study of structural properties on profiles HMMs
+33. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+34. Temporal Reasoning without Transitive Tables
+35. Robust Multi-Cellular Developmental Design
+36. Anisotropic selection in cellular genetic algorithms
+37. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+38. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+39. Le terme et le concept : fondements d'une ontoterminologie
+40. Learning to Bluff
+41. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+42. Stream Computing
+43. Modeling Computations in a Semantic Network
+44. A Collection of Definitions of Intelligence
+45. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+46. The Road to Quantum Artificial Intelligence
+47. Artificial Intelligence for Conflict Management
+48. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+49. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"has a topic of neural networks"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of fault classification"\n- "has a topic of social networks"\n- "has a topic of health practice guidelines"\n- "has a topic of artificial life and artificial cosmogenesis"\n- "has a topic of ensemble learning with evolutionary algorithms"\n- "has a topic of machine intelligence testing"\n- "has a topic of structural system response prediction"\n- "has a topic of constraint solvers and fitness landscapes"\n- "has a topic of machine intelligence definition"\n- "has a topic of semantic web modeling"\n- "has a topic of water demand forecasting"\n- "has a topic of temporal reasoning"\n- "has a topic of multi-cellular developmental design"\n- "has a topic of genetic algorithms and selection"\n- "has a topic of finite-horizon planning in decentralized POMDPs"\n- "has a topic of AI history and outlook"\n- "has a topic of ontoterminology"\n- "has a topic of bluffing strategies"\n- "has a topic of face recognition systems"\n- "has a topic of quantum artificial intelligence"\n- "has a topic of conflict management"\n- "has a topic of leaf recognition algorithms for plant classification"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+1. Modeling Computations in a Semantic Network
+2. Learning to Bluff
+3. Stream Computing
+4. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+5. Toward Psycho-robots
+6. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+7. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+8. Ensemble Learning for Free with Evolutionary Algorithms ?
+9. A study of structural properties on profiles HMMs
+10. Le terme et le concept : fondements d'une ontoterminologie
+11. Lagrangian Relaxation for MAP Estimation in Graphical Models
+12. Truecluster matching
+13. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+14. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+15. Measuring the Evolvability Landscape to study Neutrality
+16. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+17. The Road to Quantum Artificial Intelligence
+18. Artificial Intelligence for Conflict Management
+19. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+20. Analyzing covert social network foundation behind terrorism disaster
+21. Bayesian Approach to Neuro-Rough Models
+22. Anisotropic selection in cellular genetic algorithms
+23. Calculating Valid Domains for BDD-Based Interactive Configuration
+24. Automatically Restructuring Practice Guidelines using the GEM DTD
+25. Using RDF to Model the Structure and Process of Systems
+26. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+27. Qualitative Belief Conditioning Rules (QBCR)
+28. Universal Intelligence: A Definition of Machine Intelligence
+29. Tests of Machine Intelligence
+30. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+31. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+32. Bayesian approach to rough set
+33. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+34. Evolving Symbolic Controllers
+35. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+36. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+37. Local search heuristics: Fitness Cloud versus Fitness Landscape
+38. Robust Multi-Cellular Developmental Design
+39. Soft constraint abstraction based on semiring homomorphism
+40. Decomposition During Search for Propagation-Based Constraint Solvers
+41. Evolving localizations in reaction-diffusion cellular automata
+42. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+43. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+44. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+45. On-Line Condition Monitoring using Computational Intelligence
+46. Temporal Reasoning without Transitive Tables
+47. Node discovery problem for a social network
+48. A Collection of Definitions of Intelligence
+49. Predicting relevant empty spots in social interaction
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of machine learning"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of fault classification"\n- "has a topic of neural networks"\n- "has a topic of artificial intelligence"\n- "has a topic of evolutionary algorithms"\n- "has a topic of computational modeling"\n- "has a topic of robotics"\n- "has a topic of natural language processing"\n- "has a topic of constraint solvers"\n- "has a topic of social networks"\n- "has a topic of machine intelligence"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+1. On-Line Condition Monitoring using Computational Intelligence
+2. Anisotropic selection in cellular genetic algorithms
+3. A Collection of Definitions of Intelligence
+4. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+5. Decomposition During Search for Propagation-Based Constraint Solvers
+6. Measuring the Evolvability Landscape to study Neutrality
+7. A study of structural properties on profiles HMMs
+8. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+9. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+10. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+11. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+12. Soft constraint abstraction based on semiring homomorphism
+13. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+14. Toward Psycho-robots
+15. Evolving localizations in reaction-diffusion cellular automata
+16. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+17. Learning to Bluff
+18. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+19. Calculating Valid Domains for BDD-Based Interactive Configuration
+20. Analyzing covert social network foundation behind terrorism disaster
+21. Local search heuristics: Fitness Cloud versus Fitness Landscape
+22. Robust Multi-Cellular Developmental Design
+23. Bayesian Approach to Neuro-Rough Models
+24. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+25. Tests of Machine Intelligence
+26. Evolving Symbolic Controllers
+27. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+28. Bayesian approach to rough set
+29. Ensemble Learning for Free with Evolutionary Algorithms ?
+30. Modeling Computations in a Semantic Network
+31. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+32. Automatically Restructuring Practice Guidelines using the GEM DTD
+33. The Road to Quantum Artificial Intelligence
+34. Lagrangian Relaxation for MAP Estimation in Graphical Models
+35. Qualitative Belief Conditioning Rules (QBCR)
+36. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+37. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+38. Le terme et le concept : fondements d'une ontoterminologie
+39. Temporal Reasoning without Transitive Tables
+40. Predicting relevant empty spots in social interaction
+41. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+42. Stream Computing
+43. Universal Intelligence: A Definition of Machine Intelligence
+44. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+45. Using RDF to Model the Structure and Process of Systems
+46. Node discovery problem for a social network
+47. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+48. Truecluster matching
+49. Artificial Intelligence for Conflict Management
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of computational intelligence"
+"has a topic of neural networks"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of neural networks"\n- "has a topic of evolutionary algorithms"\n- "has a topic of computational intelligence"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Analyzing covert social network foundation behind terrorism disaster
+1. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+2. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+3. On-Line Condition Monitoring using Computational Intelligence
+4. Bayesian approach to rough set
+5. Calculating Valid Domains for BDD-Based Interactive Configuration
+6. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+7. Universal Intelligence: A Definition of Machine Intelligence
+8. Node discovery problem for a social network
+9. Toward Psycho-robots
+10. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+11. Automatically Restructuring Practice Guidelines using the GEM DTD
+12. A study of structural properties on profiles HMMs
+13. The Road to Quantum Artificial Intelligence
+14. Anisotropic selection in cellular genetic algorithms
+15. Evolving Symbolic Controllers
+16. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+17. Learning to Bluff
+18. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+19. Truecluster matching
+20. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+21. A Collection of Definitions of Intelligence
+22. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+23. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+24. Bayesian Approach to Neuro-Rough Models
+25. Temporal Reasoning without Transitive Tables
+26. Modeling Computations in a Semantic Network
+27. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+28. Le terme et le concept : fondements d'une ontoterminologie
+29. Robust Multi-Cellular Developmental Design
+30. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+31. Using RDF to Model the Structure and Process of Systems
+32. Artificial Intelligence for Conflict Management
+33. Predicting relevant empty spots in social interaction
+34. Qualitative Belief Conditioning Rules (QBCR)
+35. Soft constraint abstraction based on semiring homomorphism
+36. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+37. Decomposition During Search for Propagation-Based Constraint Solvers
+38. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+39. Measuring the Evolvability Landscape to study Neutrality
+40. Ensemble Learning for Free with Evolutionary Algorithms ?
+41. Lagrangian Relaxation for MAP Estimation in Graphical Models
+42. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+43. Tests of Machine Intelligence
+44. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+45. Evolving localizations in reaction-diffusion cellular automata
+46. Stream Computing
+47. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+48. Local search heuristics: Fitness Cloud versus Fitness Landscape
+49. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of neural networks"
+"- "has a topic of artificial intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of computational intelligence"\n- "has a topic of neural networks"\n- "has a topic of evolutionary algorithms"\n- "has a topic of constraint satisfaction problems"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Automatically Restructuring Practice Guidelines using the GEM DTD
+1. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+2. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+3. Decomposition During Search for Propagation-Based Constraint Solvers
+4. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+5. Ensemble Learning for Free with Evolutionary Algorithms ?
+6. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+7. Learning to Bluff
+8. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+9. Node discovery problem for a social network
+10. Le terme et le concept : fondements d'une ontoterminologie
+11. Local search heuristics: Fitness Cloud versus Fitness Landscape
+12. Robust Multi-Cellular Developmental Design
+13. Bayesian approach to rough set
+14. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+15. Qualitative Belief Conditioning Rules (QBCR)
+16. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+17. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+18. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+19. Analyzing covert social network foundation behind terrorism disaster
+20. The Road to Quantum Artificial Intelligence
+21. Evolving localizations in reaction-diffusion cellular automata
+22. A study of structural properties on profiles HMMs
+23. Measuring the Evolvability Landscape to study Neutrality
+24. Truecluster matching
+25. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+26. Soft constraint abstraction based on semiring homomorphism
+27. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+28. A Collection of Definitions of Intelligence
+29. Anisotropic selection in cellular genetic algorithms
+30. Tests of Machine Intelligence
+31. Temporal Reasoning without Transitive Tables
+32. Evolving Symbolic Controllers
+33. Modeling Computations in a Semantic Network
+34. Stream Computing
+35. Calculating Valid Domains for BDD-Based Interactive Configuration
+36. Bayesian Approach to Neuro-Rough Models
+37. Toward Psycho-robots
+38. Predicting relevant empty spots in social interaction
+39. Universal Intelligence: A Definition of Machine Intelligence
+40. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+41. Using RDF to Model the Structure and Process of Systems
+42. On-Line Condition Monitoring using Computational Intelligence
+43. Artificial Intelligence for Conflict Management
+44. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+45. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+46. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+47. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+48. Lagrangian Relaxation for MAP Estimation in Graphical Models
+49. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of machine learning"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['"has a topic of artificial intelligence"\n"has a topic of neural networks"\n"has a topic of evolutionary algorithms"\n"has a topic of constraint solvers"\n"has a topic of fuzzy logic"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+1. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+2. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+3. Bayesian Approach to Neuro-Rough Models
+4. Evolving Symbolic Controllers
+5. Bayesian approach to rough set
+6. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+7. Stream Computing
+8. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+9. Local search heuristics: Fitness Cloud versus Fitness Landscape
+10. Robust Multi-Cellular Developmental Design
+11. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+12. A study of structural properties on profiles HMMs
+13. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+14. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+15. Analyzing covert social network foundation behind terrorism disaster
+16. Anisotropic selection in cellular genetic algorithms
+17. Lagrangian Relaxation for MAP Estimation in Graphical Models
+18. Le terme et le concept : fondements d'une ontoterminologie
+19. Using RDF to Model the Structure and Process of Systems
+20. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+21. Evolving localizations in reaction-diffusion cellular automata
+22. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+23. Decomposition During Search for Propagation-Based Constraint Solvers
+24. Soft constraint abstraction based on semiring homomorphism
+25. Measuring the Evolvability Landscape to study Neutrality
+26. Calculating Valid Domains for BDD-Based Interactive Configuration
+27. A Collection of Definitions of Intelligence
+28. Universal Intelligence: A Definition of Machine Intelligence
+29. On-Line Condition Monitoring using Computational Intelligence
+30. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+31. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+32. Toward Psycho-robots
+33. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+34. Temporal Reasoning without Transitive Tables
+35. Node discovery problem for a social network
+36. Modeling Computations in a Semantic Network
+37. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+38. Learning to Bluff
+39. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+40. Artificial Intelligence for Conflict Management
+41. The Road to Quantum Artificial Intelligence
+42. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+43. Qualitative Belief Conditioning Rules (QBCR)
+44. Truecluster matching
+45. Predicting relevant empty spots in social interaction
+46. Automatically Restructuring Practice Guidelines using the GEM DTD
+47. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+48. Ensemble Learning for Free with Evolutionary Algorithms ?
+49. Tests of Machine Intelligence
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"- "has a topic of artificial intelligence"
+"has a topic of evolutionary algorithms"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial neural networks"\n- "has a topic of machine learning"\n- "has a topic of computational intelligence"\n- "has a topic of evolutionary algorithms"\n- "has a topic of neural network systems"\n- "has a topic of fuzzy logic and neural networks"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+1. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+2. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+3. The Road to Quantum Artificial Intelligence
+4. Bayesian Approach to Neuro-Rough Models
+5. Artificial Intelligence for Conflict Management
+6. Tests of Machine Intelligence
+7. Calculating Valid Domains for BDD-Based Interactive Configuration
+8. Temporal Reasoning without Transitive Tables
+9. Local search heuristics: Fitness Cloud versus Fitness Landscape
+10. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+11. Predicting relevant empty spots in social interaction
+12. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+13. Decomposition During Search for Propagation-Based Constraint Solvers
+14. Lagrangian Relaxation for MAP Estimation in Graphical Models
+15. Bayesian approach to rough set
+16. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+17. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+18. Using RDF to Model the Structure and Process of Systems
+19. Toward Psycho-robots
+20. Anisotropic selection in cellular genetic algorithms
+21. Robust Multi-Cellular Developmental Design
+22. Node discovery problem for a social network
+23. Qualitative Belief Conditioning Rules (QBCR)
+24. Soft constraint abstraction based on semiring homomorphism
+25. A study of structural properties on profiles HMMs
+26. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+27. Ensemble Learning for Free with Evolutionary Algorithms ?
+28. On-Line Condition Monitoring using Computational Intelligence
+29. Truecluster matching
+30. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+31. Evolving Symbolic Controllers
+32. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+33. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+34. Learning to Bluff
+35. Evolving localizations in reaction-diffusion cellular automata
+36. Stream Computing
+37. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+38. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+39. Measuring the Evolvability Landscape to study Neutrality
+40. A Collection of Definitions of Intelligence
+41. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+42. Automatically Restructuring Practice Guidelines using the GEM DTD
+43. Modeling Computations in a Semantic Network
+44. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+45. Universal Intelligence: A Definition of Machine Intelligence
+46. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+47. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+48. Analyzing covert social network foundation behind terrorism disaster
+49. Le terme et le concept : fondements d'une ontoterminologie
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"- "has a topic of artificial intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of reasoning under uncertainty"\n- "has a topic of artificial intelligence"\n- "has a topic of semantic web and logic programming"\n- "has a topic of quantum artificial intelligence"\n- "has a topic of machine learning heuristics"\n- "has a topic of constraint solvers and optimization"\n- "has a topic of neural networks and support vector machines"\n- "has a topic of computational intelligence and evolutionary algorithms"\n- "has a topic of social networks and network analysis"\n- "has a topic of structural properties and HMMs"\n- "has a topic of machine intelligence and robotics"\n- "has a topic of artificial life and simulations"\n- "has a topic of water demand forecasting"\n- "has a topic of bluffing strategies"\n- "has a topic of reaction-diffusion cellular automata"\n- "has a topic of stream computing"\n- "has a topic of algorithmic probability and utility convergence"\n- "has a topic of plant classification and neural networks"\n- "has a topic of machine intelligence definitions"\n- "has a topic of earthquake response prediction"\n- "has a topic of AI history and future outlook"\n- "has a topic of social network analysis in terrorism"\n- "has a topic of ontoterminology and concepts"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Analyzing covert social network foundation behind terrorism disaster
+1. Bayesian approach to rough set
+2. Qualitative Belief Conditioning Rules (QBCR)
+3. Toward Psycho-robots
+4. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+5. Calculating Valid Domains for BDD-Based Interactive Configuration
+6. Robust Multi-Cellular Developmental Design
+7. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+8. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+9. The Road to Quantum Artificial Intelligence
+10. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+11. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+12. Measuring the Evolvability Landscape to study Neutrality
+13. Decomposition During Search for Propagation-Based Constraint Solvers
+14. Automatically Restructuring Practice Guidelines using the GEM DTD
+15. Ensemble Learning for Free with Evolutionary Algorithms ?
+16. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+17. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+18. Predicting relevant empty spots in social interaction
+19. Tests of Machine Intelligence
+20. Anisotropic selection in cellular genetic algorithms
+21. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+22. Modeling Computations in a Semantic Network
+23. Artificial Intelligence for Conflict Management
+24. Evolving Symbolic Controllers
+25. Stream Computing
+26. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+27. Temporal Reasoning without Transitive Tables
+28. Bayesian Approach to Neuro-Rough Models
+29. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+30. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+31. Local search heuristics: Fitness Cloud versus Fitness Landscape
+32. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+33. Using RDF to Model the Structure and Process of Systems
+34. Lagrangian Relaxation for MAP Estimation in Graphical Models
+35. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+36. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+37. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+38. Soft constraint abstraction based on semiring homomorphism
+39. Truecluster matching
+40. Learning to Bluff
+41. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+42. A Collection of Definitions of Intelligence
+43. A study of structural properties on profiles HMMs
+44. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+45. Universal Intelligence: A Definition of Machine Intelligence
+46. Le terme et le concept : fondements d'une ontoterminologie
+47. Node discovery problem for a social network
+48. On-Line Condition Monitoring using Computational Intelligence
+49. Evolving localizations in reaction-diffusion cellular automata
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"- "has a topic of artificial intelligence"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of covert social network foundation"\n- "has a topic of Bayesian approach"\n- "has a topic of psycho-robots"\n- "has a topic of time complexity analysis"\n- "has a topic of interactive configuration"\n- "has a topic of multi-cellular developmental design"\n- "has a topic of reasoning under uncertainty"\n- "has a topic of cellular automata"\n- "has a topic of quantum artificial intelligence"\n- "has a topic of fuzzy artmap and neural network"\n- "has a topic of scientific simulations"\n- "has a topic of evolvability landscape"\n- "has a topic of constraint solvers"\n- "has a topic of practice guidelines"\n- "has a topic of ensemble learning"\n- "has a topic of fault classification"\n- "has a topic of linguistic platform"\n- "has a topic of social interaction"\n- "has a topic of machine intelligence"\n- "has a topic of genetic algorithms"\n- "has a topic of health practice guidelines"\n- "has a topic of semantic network modeling"\n- "has a topic of conflict management"\n- "has a topic of symbolic controllers"\n- "has a topic of stream computing"\n- "has a topic of water demand forecasting"\n- "has a topic of temporal reasoning"\n- "has a topic of neuro-rough models"\n- "has a topic of structural system response prediction"\n- "has a topic of fault classification in cylinders"\n- "has a topic of local search heuristics"\n- "has a topic of AI history and outlook"\n- "has a topic of RDF modeling"\n- "has a topic of MAP estimation"\n- "has a topic of leaf recognition algorithm"\n- "has a topic of finite-horizon planning"\n- "has a topic of neural-network systems for face recognition"\n- "has a topic of soft constraint abstraction"\n- "has a topic of cluster matching"\n- "has a topic of learning to bluff"\n- "has a topic of expected utilities convergence"\n- "has a topic of intelligence definitions"\n- "has a topic of structural properties study"\n- "has a topic of OWL and Semantic Web rules translation"\n- "has a topic of universal intelligence"\n- "has a topic of ontoterminology"\n- "has a topic of social network node discovery"\n- "has a topic of online condition monitoring"\n- "has a topic of localizations evolution"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Using RDF to Model the Structure and Process of Systems
+1. Lagrangian Relaxation for MAP Estimation in Graphical Models
+2. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+3. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+4. Local search heuristics: Fitness Cloud versus Fitness Landscape
+5. Node discovery problem for a social network
+6. Evolving Symbolic Controllers
+7. Artificial Intelligence for Conflict Management
+8. Le terme et le concept : fondements d'une ontoterminologie
+9. Toward Psycho-robots
+10. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+11. Universal Intelligence: A Definition of Machine Intelligence
+12. Learning to Bluff
+13. Stream Computing
+14. Modeling Computations in a Semantic Network
+15. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+16. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+17. Bayesian approach to rough set
+18. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+19. Evolving localizations in reaction-diffusion cellular automata
+20. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+21. Automatically Restructuring Practice Guidelines using the GEM DTD
+22. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+23. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+24. Analyzing covert social network foundation behind terrorism disaster
+25. Measuring the Evolvability Landscape to study Neutrality
+26. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+27. Calculating Valid Domains for BDD-Based Interactive Configuration
+28. On-Line Condition Monitoring using Computational Intelligence
+29. Decomposition During Search for Propagation-Based Constraint Solvers
+30. A study of structural properties on profiles HMMs
+31. Qualitative Belief Conditioning Rules (QBCR)
+32. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+33. Soft constraint abstraction based on semiring homomorphism
+34. A Collection of Definitions of Intelligence
+35. Tests of Machine Intelligence
+36. Temporal Reasoning without Transitive Tables
+37. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+38. Robust Multi-Cellular Developmental Design
+39. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+40. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+41. Bayesian Approach to Neuro-Rough Models
+42. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+43. Anisotropic selection in cellular genetic algorithms
+44. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+45. Predicting relevant empty spots in social interaction
+46. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+47. The Road to Quantum Artificial Intelligence
+48. Ensemble Learning for Free with Evolutionary Algorithms ?
+49. Truecluster matching
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of neural networks"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of computational modeling"\n- "has a topic of neural networks"\n- "has a topic of evolutionary algorithms"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Toward Psycho-robots
+1. The Road to Quantum Artificial Intelligence
+2. Universal Intelligence: A Definition of Machine Intelligence
+3. Measuring the Evolvability Landscape to study Neutrality
+4. Anisotropic selection in cellular genetic algorithms
+5. A Collection of Definitions of Intelligence
+6. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+7. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+8. Calculating Valid Domains for BDD-Based Interactive Configuration
+9. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+10. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+11. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+12. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+13. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+14. Lagrangian Relaxation for MAP Estimation in Graphical Models
+15. Decomposition During Search for Propagation-Based Constraint Solvers
+16. Tests of Machine Intelligence
+17. Using RDF to Model the Structure and Process of Systems
+18. Evolving localizations in reaction-diffusion cellular automata
+19. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+20. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+21. Local search heuristics: Fitness Cloud versus Fitness Landscape
+22. Learning to Bluff
+23. A study of structural properties on profiles HMMs
+24. Truecluster matching
+25. Qualitative Belief Conditioning Rules (QBCR)
+26. Bayesian approach to rough set
+27. On-Line Condition Monitoring using Computational Intelligence
+28. Temporal Reasoning without Transitive Tables
+29. Node discovery problem for a social network
+30. Evolving Symbolic Controllers
+31. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+32. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+33. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+34. Soft constraint abstraction based on semiring homomorphism
+35. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+36. Le terme et le concept : fondements d'une ontoterminologie
+37. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+38. Analyzing covert social network foundation behind terrorism disaster
+39. Automatically Restructuring Practice Guidelines using the GEM DTD
+40. Robust Multi-Cellular Developmental Design
+41. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+42. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+43. Ensemble Learning for Free with Evolutionary Algorithms ?
+44. Stream Computing
+45. Artificial Intelligence for Conflict Management
+46. Predicting relevant empty spots in social interaction
+47. Bayesian Approach to Neuro-Rough Models
+48. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+49. Modeling Computations in a Semantic Network
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of neural networks"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of evolutionary algorithms"\n- "has a topic of neural networks"\n- "has a topic of computational intelligence"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. On-Line Condition Monitoring using Computational Intelligence
+1. Truecluster matching
+2. Tests of Machine Intelligence
+3. Anisotropic selection in cellular genetic algorithms
+4. Artificial Intelligence for Conflict Management
+5. Decomposition During Search for Propagation-Based Constraint Solvers
+6. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+7. Universal Intelligence: A Definition of Machine Intelligence
+8. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+9. Stream Computing
+10. Le terme et le concept : fondements d'une ontoterminologie
+11. Bayesian Approach to Neuro-Rough Models
+12. Ensemble Learning for Free with Evolutionary Algorithms ?
+13. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+14. Robust Multi-Cellular Developmental Design
+15. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+16. A study of structural properties on profiles HMMs
+17. Qualitative Belief Conditioning Rules (QBCR)
+18. Predicting relevant empty spots in social interaction
+19. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+20. Temporal Reasoning without Transitive Tables
+21. Modeling Computations in a Semantic Network
+22. Calculating Valid Domains for BDD-Based Interactive Configuration
+23. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+24. Node discovery problem for a social network
+25. Bayesian approach to rough set
+26. Toward Psycho-robots
+27. Evolving localizations in reaction-diffusion cellular automata
+28. Lagrangian Relaxation for MAP Estimation in Graphical Models
+29. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+30. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+31. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+32. Soft constraint abstraction based on semiring homomorphism
+33. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+34. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+35. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+36. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+37. Learning to Bluff
+38. A Collection of Definitions of Intelligence
+39. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+40. Measuring the Evolvability Landscape to study Neutrality
+41. Analyzing covert social network foundation behind terrorism disaster
+42. Automatically Restructuring Practice Guidelines using the GEM DTD
+43. Using RDF to Model the Structure and Process of Systems
+44. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+45. The Road to Quantum Artificial Intelligence
+46. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+47. Evolving Symbolic Controllers
+48. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+49. Local search heuristics: Fitness Cloud versus Fitness Landscape
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of computational intelligence"
+"has a topic of evolutionary algorithms"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['"has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of neural networks"\n- "has a topic of computational modeling"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Learning to Bluff
+1. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+2. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+3. Decomposition During Search for Propagation-Based Constraint Solvers
+4. Measuring the Evolvability Landscape to study Neutrality
+5. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+6. The Road to Quantum Artificial Intelligence
+7. On-Line Condition Monitoring using Computational Intelligence
+8. Truecluster matching
+9. Ensemble Learning for Free with Evolutionary Algorithms ?
+10. Using RDF to Model the Structure and Process of Systems
+11. Modeling Computations in a Semantic Network
+12. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+13. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+14. Analyzing covert social network foundation behind terrorism disaster
+15. Soft constraint abstraction based on semiring homomorphism
+16. Universal Intelligence: A Definition of Machine Intelligence
+17. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+18. Automatically Restructuring Practice Guidelines using the GEM DTD
+19. Artificial Intelligence for Conflict Management
+20. Lagrangian Relaxation for MAP Estimation in Graphical Models
+21. Bayesian Approach to Neuro-Rough Models
+22. Toward Psycho-robots
+23. Node discovery problem for a social network
+24. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+25. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+26. Le terme et le concept : fondements d'une ontoterminologie
+27. Evolving localizations in reaction-diffusion cellular automata
+28. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+29. Tests of Machine Intelligence
+30. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+31. Temporal Reasoning without Transitive Tables
+32. Calculating Valid Domains for BDD-Based Interactive Configuration
+33. Bayesian approach to rough set
+34. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+35. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+36. Stream Computing
+37. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+38. A study of structural properties on profiles HMMs
+39. A Collection of Definitions of Intelligence
+40. Anisotropic selection in cellular genetic algorithms
+41. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+42. Predicting relevant empty spots in social interaction
+43. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+44. Local search heuristics: Fitness Cloud versus Fitness Landscape
+45. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+46. Evolving Symbolic Controllers
+47. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+48. Robust Multi-Cellular Developmental Design
+49. Qualitative Belief Conditioning Rules (QBCR)
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of neural networks"
+"has a topic of machine learning"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of computational intelligence"\n- "has a topic of neural networks"\n- "has a topic of evolutionary algorithms"\n- "has a topic of constraint solvers"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Robust Multi-Cellular Developmental Design
+1. Calculating Valid Domains for BDD-Based Interactive Configuration
+2. Measuring the Evolvability Landscape to study Neutrality
+3. Bayesian approach to rough set
+4. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+5. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+6. A study of structural properties on profiles HMMs
+7. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+8. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+9. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+10. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+11. Soft constraint abstraction based on semiring homomorphism
+12. Temporal Reasoning without Transitive Tables
+13. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+14. A Collection of Definitions of Intelligence
+15. The Road to Quantum Artificial Intelligence
+16. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+17. On-Line Condition Monitoring using Computational Intelligence
+18. Lagrangian Relaxation for MAP Estimation in Graphical Models
+19. Predicting relevant empty spots in social interaction
+20. Analyzing covert social network foundation behind terrorism disaster
+21. Qualitative Belief Conditioning Rules (QBCR)
+22. Learning to Bluff
+23. Artificial Intelligence for Conflict Management
+24. Anisotropic selection in cellular genetic algorithms
+25. Le terme et le concept : fondements d'une ontoterminologie
+26. Toward Psycho-robots
+27. Decomposition During Search for Propagation-Based Constraint Solvers
+28. Local search heuristics: Fitness Cloud versus Fitness Landscape
+29. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+30. Evolving localizations in reaction-diffusion cellular automata
+31. Truecluster matching
+32. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+33. Automatically Restructuring Practice Guidelines using the GEM DTD
+34. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+35. Tests of Machine Intelligence
+36. Modeling Computations in a Semantic Network
+37. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+38. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+39. Node discovery problem for a social network
+40. Evolving Symbolic Controllers
+41. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+42. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+43. Universal Intelligence: A Definition of Machine Intelligence
+44. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+45. Using RDF to Model the Structure and Process of Systems
+46. Bayesian Approach to Neuro-Rough Models
+47. Ensemble Learning for Free with Evolutionary Algorithms ?
+48. Stream Computing
+49. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of machine learning"
+"- "has a topic of artificial intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of machine learning"\n- "has a topic of artificial intelligence"\n- "has a topic of computational intelligence"\n- "has a topic of neural networks"\n- "has a topic of evolutionary algorithms"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+1. Toward Psycho-robots
+2. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+3. Truecluster matching
+4. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+5. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+6. Using RDF to Model the Structure and Process of Systems
+7. Calculating Valid Domains for BDD-Based Interactive Configuration
+8. Le terme et le concept : fondements d'une ontoterminologie
+9. On-Line Condition Monitoring using Computational Intelligence
+10. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+11. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+12. Universal Intelligence: A Definition of Machine Intelligence
+13. Stream Computing
+14. Modeling Computations in a Semantic Network
+15. Temporal Reasoning without Transitive Tables
+16. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+17. Lagrangian Relaxation for MAP Estimation in Graphical Models
+18. A study of structural properties on profiles HMMs
+19. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+20. Soft constraint abstraction based on semiring homomorphism
+21. Local search heuristics: Fitness Cloud versus Fitness Landscape
+22. Bayesian Approach to Neuro-Rough Models
+23. Node discovery problem for a social network
+24. Ensemble Learning for Free with Evolutionary Algorithms ?
+25. Tests of Machine Intelligence
+26. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+27. Automatically Restructuring Practice Guidelines using the GEM DTD
+28. Decomposition During Search for Propagation-Based Constraint Solvers
+29. Predicting relevant empty spots in social interaction
+30. A Collection of Definitions of Intelligence
+31. Measuring the Evolvability Landscape to study Neutrality
+32. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+33. Analyzing covert social network foundation behind terrorism disaster
+34. Artificial Intelligence for Conflict Management
+35. Anisotropic selection in cellular genetic algorithms
+36. Learning to Bluff
+37. Evolving Symbolic Controllers
+38. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+39. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+40. The Road to Quantum Artificial Intelligence
+41. Robust Multi-Cellular Developmental Design
+42. Bayesian approach to rough set
+43. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+44. Evolving localizations in reaction-diffusion cellular automata
+45. Qualitative Belief Conditioning Rules (QBCR)
+46. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+47. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+48. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+49. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"- "has a topic of artificial intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of neural networks"\n- "has a topic of computational intelligence"\n- "has a topic of evolutionary algorithms"\n- "has a topic of robotics"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Measuring the Evolvability Landscape to study Neutrality
+1. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+2. Modeling Computations in a Semantic Network
+3. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+4. Truecluster matching
+5. Artificial Intelligence for Conflict Management
+6. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+7. Universal Intelligence: A Definition of Machine Intelligence
+8. The Road to Quantum Artificial Intelligence
+9. Soft constraint abstraction based on semiring homomorphism
+10. A study of structural properties on profiles HMMs
+11. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+12. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+13. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+14. On-Line Condition Monitoring using Computational Intelligence
+15. Local search heuristics: Fitness Cloud versus Fitness Landscape
+16. Automatically Restructuring Practice Guidelines using the GEM DTD
+17. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+18. Bayesian Approach to Neuro-Rough Models
+19. Decomposition During Search for Propagation-Based Constraint Solvers
+20. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+21. Ensemble Learning for Free with Evolutionary Algorithms ?
+22. Analyzing covert social network foundation behind terrorism disaster
+23. Tests of Machine Intelligence
+24. Learning to Bluff
+25. Using RDF to Model the Structure and Process of Systems
+26. A Collection of Definitions of Intelligence
+27. Toward Psycho-robots
+28. Stream Computing
+29. Qualitative Belief Conditioning Rules (QBCR)
+30. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+31. Temporal Reasoning without Transitive Tables
+32. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+33. Bayesian approach to rough set
+34. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+35. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+36. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+37. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+38. Evolving localizations in reaction-diffusion cellular automata
+39. Anisotropic selection in cellular genetic algorithms
+40. Predicting relevant empty spots in social interaction
+41. Lagrangian Relaxation for MAP Estimation in Graphical Models
+42. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+43. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+44. Node discovery problem for a social network
+45. Evolving Symbolic Controllers
+46. Calculating Valid Domains for BDD-Based Interactive Configuration
+47. Robust Multi-Cellular Developmental Design
+48. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+49. Le terme et le concept : fondements d'une ontoterminologie
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of evolutionary algorithms"
+"has a topic of neural networks"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of computational intelligence"\n- "has a topic of neural networks"\n- "has a topic of evolutionary algorithms"\n- "has a topic of constraint solvers"\n- "has a topic of social networks"\n- "has a topic of fuzzy logic"\n- "has a topic of quantum artificial intelligence"\n- "has a topic of natural language processing"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Artificial Intelligence for Conflict Management
+1. Soft constraint abstraction based on semiring homomorphism
+2. Universal Intelligence: A Definition of Machine Intelligence
+3. Using RDF to Model the Structure and Process of Systems
+4. Temporal Reasoning without Transitive Tables
+5. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+6. Evolving Symbolic Controllers
+7. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+8. Evolving localizations in reaction-diffusion cellular automata
+9. Anisotropic selection in cellular genetic algorithms
+10. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+11. Toward Psycho-robots
+12. Truecluster matching
+13. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+14. On-Line Condition Monitoring using Computational Intelligence
+15. Tests of Machine Intelligence
+16. Lagrangian Relaxation for MAP Estimation in Graphical Models
+17. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+18. Automatically Restructuring Practice Guidelines using the GEM DTD
+19. Measuring the Evolvability Landscape to study Neutrality
+20. Le terme et le concept : fondements d'une ontoterminologie
+21. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+22. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+23. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+24. Qualitative Belief Conditioning Rules (QBCR)
+25. Local search heuristics: Fitness Cloud versus Fitness Landscape
+26. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+27. Stream Computing
+28. Learning to Bluff
+29. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+30. Node discovery problem for a social network
+31. Predicting relevant empty spots in social interaction
+32. Analyzing covert social network foundation behind terrorism disaster
+33. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+34. The Road to Quantum Artificial Intelligence
+35. Decomposition During Search for Propagation-Based Constraint Solvers
+36. Ensemble Learning for Free with Evolutionary Algorithms ?
+37. Robust Multi-Cellular Developmental Design
+38. Calculating Valid Domains for BDD-Based Interactive Configuration
+39. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+40. Modeling Computations in a Semantic Network
+41. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+42. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+43. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+44. Bayesian approach to rough set
+45. A Collection of Definitions of Intelligence
+46. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+47. A study of structural properties on profiles HMMs
+48. Bayesian Approach to Neuro-Rough Models
+49. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of neural networks"
+"- "has a topic of artificial intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of artificial intelligence"\n- "has a topic of machine learning"\n- "has a topic of computational intelligence"\n- "has a topic of neural networks"\n- "has a topic of constraint satisfaction problems"']
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Tests of Machine Intelligence
+1. Bayesian approach to rough set
+2. Measuring the Evolvability Landscape to study Neutrality
+3. Soft constraint abstraction based on semiring homomorphism
+4. Local search heuristics: Fitness Cloud versus Fitness Landscape
+5. Evolving Symbolic Controllers
+6. A Leaf Recognition Algorithm for Plant Classification Using
+  Probabilistic Neural Network
+7. A Collection of Definitions of Intelligence
+8. Anisotropic selection in cellular genetic algorithms
+9. Truecluster matching
+10. Node discovery problem for a social network
+11. Artificial Neural Networks and Support Vector Machines for Water Demand
+  Time Series Forecasting
+12. On-Line Condition Monitoring using Computational Intelligence
+13. Learning to Bluff
+14. Translating OWL and Semantic Web Rules into Prolog: Moving Toward
+  Description Logic Programs
+15. 2006: Celebrating 75 years of AI - History and Outlook: the Next 25
+  Years
+16. Automatically Restructuring Practice Guidelines using the GEM DTD
+17. The Road to Quantum Artificial Intelligence
+18. Analyzing covert social network foundation behind terrorism disaster
+19. Mixed Integer Linear Programming For Exact Finite-Horizon Planning In
+  Decentralized Pomdps
+20. Fuzzy Artmap and Neural Network Approach to Online Processing of Inputs
+  with Missing Values
+21. Using RDF to Model the Structure and Process of Systems
+22. Predicting relevant empty spots in social interaction
+23. Calculating Valid Domains for BDD-Based Interactive Configuration
+24. Evolving localizations in reaction-diffusion cellular automata
+25. Modeling Computations in a Semantic Network
+26. Fitness landscape of the cellular automata majority problem: View from
+  the Olympus
+27. The Future of Scientific Simulations: from Artificial Life to Artificial
+  Cosmogenesis
+28. A Robust Linguistic Platform for Efficient and Domain specific Web
+  Content Analysis
+29. Comparing Robustness of Pairwise and Multiclass Neural-Network Systems
+  for Face Recognition
+30. Le terme et le concept : fondements d'une ontoterminologie
+31. Response Prediction of Structural System Subject to Earthquake Motions
+  using Artificial Neural Network
+32. Convergence of Expected Utilities with Algorithmic Probability
+  Distributions
+33. Universal Intelligence: A Definition of Machine Intelligence
+34. Decomposition During Search for Propagation-Based Constraint Solvers
+35. Temporal Reasoning without Transitive Tables
+36. From Texts to Structured Documents: The Case of Health Practice
+  Guidelines
+37. A study of structural properties on profiles HMMs
+38. Qualitative Belief Conditioning Rules (QBCR)
+39. Serious Flaws in Korf et al.'s Analysis on Time Complexity of A*
+40. Enrichment of Qualitative Beliefs for Reasoning under Uncertainty
+41. Stream Computing
+42. Ensemble Learning for Free with Evolutionary Algorithms ?
+43. Bayesian Approach to Neuro-Rough Models
+44. Artificial Intelligence for Conflict Management
+45. Toward Psycho-robots
+46. Fault Classification using Pseudomodal Energies and Neuro-fuzzy
+  modelling
+47. Robust Multi-Cellular Developmental Design
+48. Lagrangian Relaxation for MAP Estimation in Graphical Models
+49. Fault Classification in Cylinders Using Multilayer Perceptrons, Support
+  Vector Machines and Guassian Mixture Models
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of neural networks"
+"has a topic of computational intelligence"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['"has a topic of machine intelligence"\n- "has a topic of artificial intelligence"\n- "has a topic of evolutionary algorithms"\n- "has a topic of neural networks"\n- "has a topic of computational intelligence"\n- "has a topic of fuzzy logic"\n- "has a topic of constraint satisfaction problems"\n- "has a topic of probabilistic modeling"\n- "has a topic of social networks"\n- "has a topic of semantic web technologies"']
+50 descriptions proposed in total. Here are the descriptions:
+- "has a topic of artificial neural networks
+has a topic of fuzzy logic and neural networks
+- "has a topic of fault classification
+has a topic of ensemble learning with evolutionary algorithms
+"has a topic of artificial intelligence"
+"has a topic of neural networks"
+"has a topic of evolutionary algorithms"
+"has a topic of constraint solvers"
+"has a topic of fuzzy logic
+- "has a topic of machine learning
+- "has a topic of reasoning under uncertainty
+has a topic of constraint solvers and fitness landscapes
+has a topic of psycho-robots
+has a topic of semantic web and logic programming
+- "has a topic of covert social network foundation
+"has a topic of artificial intelligence
+has a topic of Bayesian approach
+has a topic of neural networks
+has a topic of social network foundation behind terrorism disaster
+has a topic of evolutionary algorithms
+has a topic of constraint solvers
+has a topic of probabilistic modeling
+has a topic of robotics
+has a topic of quantum artificial intelligence
+- "has a topic of neural networks
+has a topic of constraint solvers and optimization
+- "has a topic of neuro-rough models
+has a topic of constraint satisfaction problems
+has a topic of computational modeling
+has a topic of social networks
+has a topic of time complexity analysis
+has a topic of natural language processing
+has a topic of artificial intelligence
+has a topic of RDF modeling of systems
+has a topic of reasoning under uncertainty
+has a topic of neural network systems
+has a topic of neural networks and support vector machines
+has a topic of health practice guidelines
+has a topic of fuzzy logic
+has a topic of structural system response prediction
+has a topic of soft constraint abstraction based on semiring homomorphism
+has a topic of machine learning
+has a topic of computational intelligence
+has a topic of artificial life and artificial cosmogenesis
+has a topic of machine learning heuristics
+has a topic of interactive configuration
+- "has a topic of artificial intelligence
+has a topic of multi-cellular developmental design
+"has a topic of machine intelligence
+has a topic of computational intelligence and evolutionary algorithms
+has a topic of fitness landscape in cellular automata
+has a topic of online condition monitoring using computational intelligence
+has a topic of machine intelligence testing
+has a topic of cellular automata
+Stage Assign assign
+Assigned all recall: 1.0
+Assigned all precision: 0.0
+Assigned description: - "has a topic of artificial neural networks. recall: 1.0 precision: 0.0
+Assigned description: has a topic of fuzzy logic and neural networks. recall: 0.982 precision: 0.0
+Assigned description: - "has a topic of fault classification. recall: 1.0 precision: 0.0
+Assigned description: has a topic of ensemble learning with evolutionary algorithms. recall: 0.994 precision: 0.0
+Assigned description: "has a topic of artificial intelligence"
+"has a topic of neural networks"
+"has a topic of evolutionary algorithms"
+"has a topic of constraint solvers"
+"has a topic of fuzzy logic. recall: 1.0 precision: 0.0
+Assigned description: - "has a topic of machine learning. recall: 1.0 precision: 0.0
+Assigned description: - "has a topic of reasoning under uncertainty. recall: 1.0 precision: 0.0
+Assigned description: has a topic of constraint solvers and fitness landscapes. recall: 0.983 precision: 0.0
+Assigned description: has a topic of psycho-robots. recall: 0.999 precision: 0.0
+Assigned description: has a topic of semantic web and logic programming. recall: 0.973 precision: 0.0
+Assigned description: - "has a topic of covert social network foundation. recall: 1.0 precision: 0.0
+Assigned description: "has a topic of artificial intelligence. recall: 1.0 precision: 0.0
+Assigned description: has a topic of Bayesian approach. recall: 0.989 precision: 0.0
+Assigned description: has a topic of neural networks. recall: 0.997 precision: 0.0
+Assigned description: has a topic of social network foundation behind terrorism disaster. recall: 0.974 precision: 0.0
+Assigned description: has a topic of evolutionary algorithms. recall: 0.989 precision: 0.0
+Assigned description: has a topic of constraint solvers. recall: 0.985 precision: 0.0
+Assigned description: has a topic of probabilistic modeling. recall: 1.0 precision: 0.0
+Assigned description: has a topic of robotics. recall: 1.0 precision: 0.0
+Assigned description: has a topic of quantum artificial intelligence. recall: 0.996 precision: 0.0
+Assigned description: - "has a topic of neural networks. recall: 1.0 precision: 0.0
+Assigned description: has a topic of constraint solvers and optimization. recall: 0.995 precision: 0.0
+Assigned description: - "has a topic of neuro-rough models. recall: 1.0 precision: 0.0
+Assigned description: has a topic of constraint satisfaction problems. recall: 0.914 precision: 0.0
+Assigned description: has a topic of computational modeling. recall: 1.0 precision: 0.0
+Assigned description: has a topic of social networks. recall: 0.994 precision: 0.0
+Assigned description: has a topic of time complexity analysis. recall: 0.939 precision: 0.0
+Assigned description: has a topic of natural language processing. recall: 0.985 precision: 0.0
+Assigned description: has a topic of artificial intelligence. recall: 0.994 precision: 0.0
+Assigned description: has a topic of RDF modeling of systems. recall: 0.999 precision: 0.0
+Assigned description: has a topic of reasoning under uncertainty. recall: 0.999 precision: 0.0
+Assigned description: has a topic of neural network systems. recall: 0.999 precision: 0.0
+Assigned description: has a topic of neural networks and support vector machines. recall: 0.994 precision: 0.0
+Assigned description: has a topic of health practice guidelines. recall: 0.935 precision: 0.0
+Assigned description: has a topic of fuzzy logic. recall: 0.985 precision: 0.0
+Assigned description: has a topic of structural system response prediction. recall: 0.966 precision: 0.0
+Assigned description: has a topic of soft constraint abstraction based on semiring homomorphism. recall: 0.986 precision: 0.0
+Assigned description: has a topic of machine learning. recall: 0.999 precision: 0.0
+Assigned description: has a topic of computational intelligence. recall: 0.998 precision: 0.0
+Assigned description: has a topic of artificial life and artificial cosmogenesis. recall: 0.991 precision: 0.0
+Assigned description: has a topic of machine learning heuristics. recall: 0.995 precision: 0.0
+Assigned description: has a topic of interactive configuration. recall: 0.986 precision: 0.0
+Assigned description: - "has a topic of artificial intelligence. recall: 1.0 precision: 0.0
+Assigned description: has a topic of multi-cellular developmental design. recall: 0.988 precision: 0.0
+Assigned description: "has a topic of machine intelligence. recall: 1.0 precision: 0.0
+Assigned description: has a topic of computational intelligence and evolutionary algorithms. recall: 0.994 precision: 0.0
+Assigned description: has a topic of fitness landscape in cellular automata. recall: 0.933 precision: 0.0
+Assigned description: has a topic of online condition monitoring using computational intelligence. recall: 0.979 precision: 0.0
+Assigned description: has a topic of machine intelligence testing. recall: 0.996 precision: 0.0
+Assigned description: has a topic of cellular automata. recall: 0.978 precision: 0.0
+Drop 0 because it cover 1000 from 1000
+Drop 1 because it cover 982 from 1000
+Drop 2 because it cover 1000 from 1000
+Drop 3 because it cover 994 from 1000
+Drop 4 because it cover 1000 from 1000
+Drop 5 because it cover 1000 from 1000
+Drop 6 because it cover 1000 from 1000
+Drop 7 because it cover 983 from 1000
+Drop 8 because it cover 999 from 1000
+Drop 9 because it cover 973 from 1000
+Drop 10 because it cover 1000 from 1000
+Drop 11 because it cover 1000 from 1000
+Drop 12 because it cover 989 from 1000
+Drop 13 because it cover 997 from 1000
+Drop 14 because it cover 974 from 1000
+Drop 15 because it cover 989 from 1000
+Drop 16 because it cover 985 from 1000
+Drop 17 because it cover 1000 from 1000
+Drop 18 because it cover 1000 from 1000
+Drop 19 because it cover 996 from 1000
+Drop 20 because it cover 1000 from 1000
+Drop 21 because it cover 995 from 1000
+Drop 22 because it cover 1000 from 1000
+Drop 23 because it cover 914 from 1000
+Drop 24 because it cover 1000 from 1000
+Drop 25 because it cover 994 from 1000
+Drop 26 because it cover 939 from 1000
+Drop 27 because it cover 985 from 1000
+Drop 28 because it cover 994 from 1000
+Drop 29 because it cover 999 from 1000
+Drop 30 because it cover 999 from 1000
+Drop 31 because it cover 999 from 1000
+Drop 32 because it cover 994 from 1000
+Drop 33 because it cover 935 from 1000
+Drop 34 because it cover 985 from 1000
+Drop 35 because it cover 966 from 1000
+Drop 36 because it cover 986 from 1000
+Drop 37 because it cover 999 from 1000
+Drop 38 because it cover 998 from 1000
+Drop 39 because it cover 991 from 1000
+Drop 40 because it cover 995 from 1000
+Drop 41 because it cover 986 from 1000
+Drop 42 because it cover 1000 from 1000
+Drop 43 because it cover 988 from 1000
+Drop 44 because it cover 1000 from 1000
+Drop 45 because it cover 994 from 1000
+Drop 46 because it cover 933 from 1000
+Drop 47 because it cover 979 from 1000
+Drop 48 because it cover 996 from 1000
+Drop 49 because it cover 978 from 1000
+Dropping 50 descriptions because they are too popular or too unpopular:
+Selected Text Descriptions Matching
+[]

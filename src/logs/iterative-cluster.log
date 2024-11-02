@@ -1,0 +1,122 @@
+Here's a rough estimate of the cost; it might not be accurate and we are not responsible for any cost incurred.
+Each round costs 0.01, proposer spending 0.01, assigner spending 0.00. The final assignment costs 0.00.
+Total cost is 0.04
+Do you want to continue? (y/n)Loading model weights for T5 assigner google/flan-t5-xl...Done.
+Running the proposer model...
+In this task you will need to come up with categories to group the text together based on a goal, where each category can be described with a natural language predicate. For example
+
+0. How are you doing?
+1. How do I apply for visa?
+2. Isn't it ridiculous?
+3. How to get there by bus?
+4. How is it going?
+5. Aren't technological advancement good for the humanity?
+
+Here is our goal: I want to cluster the questions based on their functionalities. Your responses are:
+- "is a rhetorical quesiton"
+- "is meant for greetings"
+- "is asking for practically useful information"
+
+(note that all of them need to be natural language predicates that can be validated on the given samples)
+
+Here are some texts:
+
+0. Ben & Jerry's ongoing partnership with the Fair Trade Certified™ initiative illuminates its dedication to equitable trade and labor practices. The internationally acclaimed ice cream brand shows its devotion to making a legitimate and ethical impact in the world.
+1. The Philadelphia Flyers bolstered their lineup with exceptional Slovak winger, Adrian Belák. The talented skater could be the spark needed to ignite a successful season.
+2. Michigan State University credits its boost in rankings to the development of groundbreaking research centers and a renewed commitment to the land-grant mission.
+3. The announcement of a cutting-edge animated series has fans eagerly anticipating its spectacular debut. This bewitching venture boasts an immersive world of colorful characters, arresting visuals, and captivating storylines.
+4. Utilize toothpaste to erase scuff marks on leather furniture, restoring their sleek, polished appearance.
+5. Mastering nonverbal communication proves crucial for successful job seeking; maintaining eye contact, nodding, and adapting proper posture reflect assertiveness and confidence.
+6. Spanish cyclist Alejandro Valverde joins Team Movistar, bolstering their prospects for the upcoming Tour de France.
+7. Establishing boundaries with your mentor can prevent them from micromanaging your work; this creates a more productive relationship for both parties. Be assertive in communicating your limits and maintain them consistently.
+8. Today, BioFusion Inc., a groundbreaking biotech company, revealed a compelling scientific synthesis that examines the role of gene editing in fighting genetic diseases. Providing new insights into CRISPR technology, the enlightening document could promote unprecedented medical advancements.
+9. Skeptics of moral realism assert the subjectivity of morality, rejecting notions of universal ethical statements.
+10. Sheela Patel's entry to the Indian women's field hockey roster may offer a competitive edge, raising expectations for the squad as they brace for international tournaments.
+11. Mexican President Andres Manuel Lopez Obrador and Brazilian President Jair Bolsonaro have had disagreements on numerous occasions, highlighting the ongoing tensions between the two leaders.
+12. Various faith-based colleges boast forward momentum in recent Christian university analyses. Spiritual growth and academic excellence prove to be effective bedfellows in these esteemed institutions.
+13. The animation universe prepares to welcome a captivating new creation, bound to leave viewers spellbound. The combination of mesmerizing visuals and grandiose storytelling promises to make this upcoming release truly unforgettable.
+14. Toronto Raptors draft precocious guard Dalano Banton, bringing excitement and optimism to the team's future prospects.
+15. Pope Francis and United Nations Secretary-General António Guterres connected on issues surrounding global humanitarian crises, highlighting their shared concerns for the welfare of vulnerable populations.
+16. Mentioning positive online reviews accentuates personal credibility. Recommending testimonials by prior employers bolsters candidate integrity.
+17. Justin Trudeau and Narendra Modi have cultivated a cordial relationship, which has advanced diplomatic and cultural ties between Canada and India. This partnership has resulted in numerous trade agreements and bilateral discussions.
+18. Starbucks' FoodShare program donates unsold food items to local food banks, minimizing waste and providing nourishment to those without stable access to meals. The coffeehouse chain's commitment to alleviating food insecurity raises the bar for other businesses to follow suit.
+19. South African President Cyril Ramaphosa joined forces with Nigerian President Muhammadu Buhari to tackle corruption and governance issues in their respective nations. Will their new partnership effectively combat these obstacles?
+20. Avoiding negativity or not speaking ill of previous employers respects professionalism. Focusing on positive experiences from past roles ensures the conversation remains directed and uplifting.
+21. Accepting that there may not be an immediate or ideal solution to conflicts with an advisor can alleviate unrealistic expectations. By adopting a problem-solving mindset and staying focused on the research, the emotional impact of these challenges can be minimized.
+22. The unveiling of an exhilarating new animated series has the industry abuzz with anticipation. Expertly crafted visuals and compelling narratives are set to captivate viewers, leaving an indelible mark on the world of animation.
+23. Implementing digital minimalism—stripping away unnecessary digital distractions—can generate a sharper focus on essential tasks.
+24. Manchester United bolsters their roster by securing rising Brazilian star Lucas Paquetá, a center forward with astonishing talent; can he help bring the Premier League title back to Old Trafford?
+25. Detroit Tigers enlist slugging first baseman Jonathan Schoop, sparking optimism for a successful MLB season.
+26. The art and music faculty at Periwinkle College earns national accolades for their industry impact, helping the college retain its top-ranking status in arts education. Despite its growing public art movement, Spruce College's competing art department pales in comparison.
+27. Rival studios are undoubtedly feeling the heat after the unveiling of a staggering creative project that will forever change the animation playing field through its groundbreaking thematic and stylistic choices.
+28. Digi-Pets, an innovative pet-tech creator, uncovers a new paper detailing cutting-edge monitoring and communication devices for pets. Animal lovers prepare for an unparalleled connection with their furry friends.
+29. TechGuru Systems has published a groundbreaking study showcasing their success in developing holographic displays. The futuristic technology outlined in their paper paves the way for a new era of immersive digital experiences.
+30. Captivating storytelling, which showcases essential qualities and lessons learned, can influence interviewer engagement. By creating visual scenarios as one relays their experience, it becomes easier for the panel to see the applicant as an integral part of the company.
+31. A spellbinding new anime, rich in emotional depth, introduces an ethereal realm filled with guardian spirits entrusted with the safety of souls. Fans of the supernatural will be moved by the poignant narrative while immersed in this lush new universe.
+32. Seek counsel from an ombudsperson or mediator if necessary; they can help facilitate discussions and mediate grievances between researchers and advisors. Utilize available resources to address and resolve conflicts.
+33. Seek clarification when you are uncertain of your advisor's expectations, to reduce the risks associated with miscommunication. Do not hesitate to ask questions and request information.
+34. Acknowledging areas for improvement demonstrates self-awareness, integrity, and a commitment to grow professionally.
+35. Taking advantage of natural sunlight provides an effective sanitizing method, especially for delicate items like rugs and stuffed toys.
+36. Limiting screen time and opting for designated periods to respond to emails and messages can reduce interruptions during focused work sessions.
+37. The upcoming release of an exquisitely wrought animated series has taken the animation community by storm. Featuring a skillful blend of unforgettable characters and intricately crafted stories, this groundbreaking creation promises to be truly exceptional.
+38. Actively participating in conferences, workshops, or seminars can further improve your research skills, providing a greater sense of confidence when addressing concerns with your advisor.
+39. Canadian universities, including the University of British Columbia and McGill University, gain ground on their counterparts in the United States. The availability of government funding for research and the attraction of international faculty may be driving these advances.
+40. The animation realm is set to welcome a new addition to its ranks, with an impending series creating a stir. Admirers of the art form are eager to learn the identities of the creatives responsible for the show's visuals and storytelling.
+41. Develop a morning routine; rituals that harness mental clarity and foster energy levels, such as exercise or meditation, set the tone for a highly productive day. Consistent sleep schedules regulate circadian rhythms; adequate rest supports physiological and cognitive function, propelling overall performance.
+42. New Zealand Prime Minister Jacinda Ardern welcomed discussions with Indian Prime Minister Narendra Modi to enhance bilateral ties in trade, defense, and climate change. Can this connection advance global goals?
+43. The University of Michigan excels in college rankings, credited to its commitment to expansive research endeavors and a diverse, global student body. Can these factors become the key to sustaining its leading position?
+44. Resolute emphasis placed on STEM coursework and applications assists the Swiss Federal Institute of Technology in Zurich (ETH Zurich) in rising to prominence among European universities.
+45. To reinforce their championship-caliber roster, San Antonio Spurs enlist exciting prospect Devin Vassell, cultivating future success; can he make an immediate impact?
+46. The well-regarded archaeology program at Elderwood University flourishes, owing to frequent opportunities for hands-on excavation experience. As a result, the struggling anthropology department at Willow College weathers yet another blow to its reputation.
+47. The use of paintbrushes to clean hard-to-reach areas, such as keyboards and air conditioner fins, offers practicality and versatility.
+48. Research and development funding propel select universities to the forefront. This commitment to innovative discovery secures recurring prestige.
+49. Say goodbye to sticky residues and grime: mix equal parts white vinegar and water to create a highly effective cleaning solution. Try it on glass surfaces or countertops for a quick, streak-free shine.
+
+Here is our goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>' 
+Please suggest me a few descriptions, one in a line, starting with "-" and surrounded by quotes"". In terms of formatting, each of them needs to be a predicate about a text, for example:
+- "uses double negation"
+- "has a conservative stance"
+
+Do not output anything else. (Note that the examples might not be goal related, and your response should be both formatted correct as above and related to the goal.)
+Here are some example predicates; the generated predicates should have a similar granularity and perspective:
+
+"has a topic of innovative pet technology"
+"has a topic of sports team acquisitions and player prospects"
+
+
+Again, here's the goal: I would like to cluster them based on topic; each cluster should have a description of 'has a topic of <something>'. Your responses are:
+- "
+Proposer model response:
+['- "has a topic of ethical business practices"\n- "has a topic of sports team acquisitions and player prospects"\n- "has a topic of cutting-edge animated series"\n- "has a topic of practical household tips"\n- "has a topic of advancements in biotechnology"\n- "has a topic of philosophical debates on morality"\n- "has a topic of international diplomatic relations"\n- "has a topic of food waste reduction initiatives"\n- "has a topic of combating corruption and governance issues"\n- "has a topic of professional development and workplace communication"']
+10 descriptions proposed in total. Here are the descriptions:
+- "has a topic of academic achievements and rankings
+has a topic of innovative pet technology
+- "has a topic of ethical business practices
+has a topic of professional development and workplace interactions
+has a topic of effective cleaning solutions
+has a topic of international relations and diplomatic partnerships
+has a topic of philosophical debates on morality
+has a topic of sports team acquisitions and player prospects
+has a topic of advancements in biotechnology and gene editing
+has a topic of technological advancements in entertainment
+First prompt as an example to assigner:
+Check whether the TEXT satisfies a PROPERTY. Respond with Yes or No. When uncertain, output No. 
+
+Now complete the following example -
+input: PROPERTY: - "has a topic of academic achievements and rankings
+TEXT: Mentioning positive online reviews accentuates personal credibility. Recommending testimonials by prior employers bolsters candidate integrity.
+output:
+Stage Assign assign
+Assigned all recall: 0.8134715025906736
+Assigned all precision: 0.07643312101910828
+Assigned description: - "has a topic of academic achievements and rankings. recall: 0.7357512953367875 precision: 0.0
+Assigned description: has a topic of innovative pet technology. recall: 0.7409326424870466 precision: 0.0
+Assigned description: - "has a topic of ethical business practices. recall: 0.7409326424870466 precision: 0.0
+Assigned description: has a topic of professional development and workplace interactions. recall: 0.7409326424870466 precision: 0.0
+Assigned description: has a topic of effective cleaning solutions. recall: 0.7461139896373057 precision: 0.0
+Assigned description: has a topic of international relations and diplomatic partnerships. recall: 0.7461139896373057 precision: 0.0
+Assigned description: has a topic of philosophical debates on morality. recall: 0.7461139896373057 precision: 0.0
+Assigned description: has a topic of sports team acquisitions and player prospects. recall: 0.7461139896373057 precision: 0.0
+Assigned description: has a topic of advancements in biotechnology and gene editing. recall: 0.7409326424870466 precision: 0.0
+Assigned description: has a topic of technological advancements in entertainment. recall: 0.8031088082901554 precision: 0.07741935483870968
+Dropping 10 descriptions because they are too popular or too unpopular:
