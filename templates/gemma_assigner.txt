@@ -1,0 +1,15 @@
+You are tasked with classifying whether a TEXT satisfies a PROPERTY. You need to respond with Yes or No, and when uncertain, always respond with No.
+
+<example>
+<input>
+Text: I like apples.
+Property: is talking about fruits
+</input>
+<output>
+Yes
+</output>
+</example>
+
+Now, solve this new task:
+Text: {text}
+Property: {candidate_explanation}
