@@ -3,14 +3,18 @@ from tqdm import tqdm
 import numpy as np
 from typing import List
 from dataclasses import dataclass
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import T5Tokenizer, T5ForConditionalGeneration, AutoTokenizer
 import torch
 from tqdm import tqdm
 from utils import ChatGPTWrapperWithCost, gpt3wrapper_texts_batch_iter, parse_template
 import json
 from functools import partial
+from vllm import LLM 
+from vllm.sampling_params import SamplingParams
+from vllm.utils import random_uuid
+import os
 
-
+# os.environ['HUGGING_FACE_HUB_TOKEN'] = "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" # For debugging only
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MAX_TARGET_LENGTH = 2
 YES_NO_TOK_IDX = [150, 4273]
@@ -246,29 +250,34 @@ class T5Assigner(Assigner):
         self.tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-xxl")
         if self.verbose:
             print(f"Loading model weights for T5 assigner {model_name}...", end="")
-        self.model = T5ForConditionalGeneration.from_pretrained(model_name)
-        self.parallelize_across_device()
+        self.model = T5ForConditionalGeneration.from_pretrained(model_name, device_map="balanced")
+        # self.parallelize_across_device()
         if self.verbose:
             print("Done.")
         self.batch_size = batch_size
 
-    def parallelize_across_device(self):
-        """Parallelize the model across devices if multiple GPUs are available"""
-        num_heads = len(self.model.encoder.block)
-        num_device = torch.cuda.device_count()
-        other_device_alloc = num_heads // num_device + 1
-        first_device = num_heads - (num_device - 1) * other_device_alloc
-        device_map = {}
-        cur = 0
-        end = max(cur + first_device, 1)
-        device_map[0] = list(range(cur, end))
-        cur = end
-        for i in range(1, num_device):
-            end = min(cur + other_device_alloc, num_heads)
-            device_map[i] = list(range(cur, end))
-            cur += other_device_alloc
-        print("device_map", device_map)
-        self.model.parallelize(device_map)
+    # def parallelize_across_device(self):
+    #     """Parallelize the model across devices if multiple GPUs are available"""
+    #     num_heads = len(self.model.encoder.block)
+    #     print("Num Heads : ", num_heads)
+    #     num_device = torch.cuda.device_count()
+    #     print("Device Counts : ", num_device)
+    #     other_device_alloc = num_heads // num_device + 1
+    #     print("Other Device Alloc : ", other_device_alloc)
+    #     first_device = num_heads - (num_device - 1) * other_device_alloc
+    #     device_map = {}
+    #     cur = 0
+    #     end = max(cur + first_device, 1)
+    #     device_map[0] = list(range(cur, end))
+    #     cur = end
+    #     for i in range(1, num_device):
+    #         if i == 7:
+    #             continue
+    #         end = min(cur + other_device_alloc, num_heads)
+    #         device_map[i] = list(range(cur, end))
+    #         cur += other_device_alloc
+    #     print("device_map", device_map)
+    #     self.model.parallelize(device_map)
 
     def batch_inference(self, prompts: List[str], max_new_tokens=1):
         """
@@ -425,6 +434,84 @@ class GPTAssigner(Assigner):
             if self.verbose:
                 print("Haven't implemented the cost function for text-davinci yet.")
 
+class LLMAssigner(Assigner):
+    def __init__(
+        self,
+        model_name: str,
+        temperature: float = 0.001,
+        tensor_parallel_size: int = 1,
+        gpu_memory_utilization: float = 0.9,
+        verbose: bool = False,
+    ):
+        super().__init__(model_name=model_name, verbose=verbose)
+        self.model = model_name
+        if self.verbose:
+                print(f"Loading model {model_name} with vLLM  (tensor_parallel_size={tensor_parallel_size})...")
+        
+        self.llm = LLM(
+            model=model_name,
+            tensor_parallel_size=tensor_parallel_size,
+            gpu_memory_utilization=gpu_memory_utilization,
+            trust_remote_code=True,
+        )
+        self.sampling_params = SamplingParams(
+            temperature=temperature
+        )
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        if self.verbose:
+            print("Model loaded successfully.")
+            if tensor_parallel_size > 1:
+                    print(f"Model parallelized across {tensor_parallel_size} GPUs")
+
+    def obtain_single_assigner_scores(
+        self,
+        template: str,
+        assigner_inputs: List[AssignerInput]
+    ) -> List[float]:
+        prompts = create_prompt_inputs_for_single_assigner(template, assigner_inputs)
+        if self.verbose:
+            print("First prompt example:")
+            print(prompts[0])
+            print(f"Processing {len(prompts)} prompts with vLLM's automatic batching...")
+        messages = []
+        for d in prompts:
+            messages.append(self.tokenizer.apply_chat_template([{"role": "user", "content": d}], add_generation_prompt=True, tokenize=False))
+        outputs = self.llm.generate(messages, self.sampling_params)
+        
+
+        for d, output in zip(messages, outputs):
+            response = output.outputs[0].text.strip()
+            # print("Prompt : ", d)
+            # print("Generated Messages:", response)
+            yield 1 if "yes" in response.lower() else 0
+    
+    def obtain_multi_assigner_scores(
+        self,
+        template:str,
+        assigner_inputs: List[MultiAssignerInput],
+        add_null_description: bool = True,
+    ) -> List[List[float]]:
+        num_descriptions = len(assigner_inputs[0].candidate_explanation)
+        # TODO : Double check here again
+        assert all(
+            len(assigner_input.candidate_explanation) == num_descriptions
+            for assigner_input in assigner_inputs
+        ), "All inputs must have the same number of descriptions"
+
+        prompts = create_prompt_inputs_for_multi_assigner(
+            template, assigner_inputs, add_null_description
+        )
+        if self.verbose:
+            print("First prompt example:")
+            print(prompts[0])
+            print(f"Processing {len(prompts)} multi-prompts with vLLM's automatic batching...")
+
+        outputs = self.llm.generate(prompts, self.sampling_params)
+
+        for output in outputs:
+            response = output.outputs[0].text.strip()
+            yield parse_mutli_assigner_output(response, num_descriptions)
+
 
 def assign_descriptions(
     descriptions: List[str],
@@ -504,9 +591,12 @@ def assign_descriptions(
 
 
 def get_assigner(assigner_name, verbose=False, **kwargs):
-    gpt_assigner_names = ["gpt-4", "gpt-3.5-turbo"]
+    gpt_assigner_names = ["gpt-4", "gpt-3.5-turbo", "gpt-4o-mini"]
+    llm_assigner_names = ['google/gemma-2-2b-it', 'meta-llama/Llama-3.1-8B-Instruct', 'mistralai/Mistral-7B-v0.1']
     if assigner_name in gpt_assigner_names:
         return GPTAssigner(assigner_name, verbose=verbose, **kwargs)
+    elif assigner_name in llm_assigner_names:
+        return LLMAssigner(assigner_name, verbose=verbose, **kwargs)
     else:
         return T5Assigner(assigner_name, verbose=verbose, **kwargs)
 
@@ -514,7 +604,7 @@ def get_assigner(assigner_name, verbose=False, **kwargs):
 if __name__ == "__main__":
 
     texts = [
-        "I like this film.",
+        "I love this film!",
         "I hate this film.",
         "I am neural against this film.",
         "I both like and hate this film.",
@@ -525,8 +615,10 @@ if __name__ == "__main__":
     ]
 
     for assigner in [
-        "google/flan-t5-large",
-        "gpt-3.5-turbo",
+        # "google/flan-t5-large",
+        # "gpt-3.5-turbo",
+        "google/gemma-2-2b-it",
+        # "mistralai/Mistral-7B-v0.1"
     ]:
         assigner = get_assigner(assigner, verbose=True)
         # single assigner
@@ -534,12 +626,14 @@ if __name__ == "__main__":
             descriptions,
             texts,
             assigner,
-            template="templates/gpt_assigner.txt",
+            template="templates/gemma_assigner.txt",
             use_multi_assigner=False,
             add_null_description=False,
             progress_bar=True,
         )
         print(scores)
+
+        exit()
 
         # multi assigner
         scores = assign_descriptions(
