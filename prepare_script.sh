@@ -1,0 +1,11 @@
+CUDA_VISIBLE_DEVICES=5 python src/iterative_cluster.py \
+  --data_path processed_data/arxiv_ai_1k/abstract \
+  --exp_dir experiments/arxiv_ai_abstract \
+  --proposer_model gpt-4o-mini \
+  --assigner_name google/gemma-2-2b-it \
+  --proposer_num_descriptions_to_propose 50 \
+  --assigner_for_proposed_descriptions_template templates/gemma_assigner.txt \
+  --cluster_num_clusters 6 \
+  --min_cluster_fraction 0.0 \
+  --max_cluster_fraction 0.6 \
+  --verbose
