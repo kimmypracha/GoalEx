@@ -3,17 +3,18 @@ from tqdm import tqdm
 import numpy as np
 from typing import List
 from dataclasses import dataclass
-from transformers import T5Tokenizer, T5ForConditionalGeneration, AutoTokenizer
+from transformers import T5Tokenizer, T5ForConditionalGeneration, AutoTokenizer, T5EncoderModel
 import torch
+import torch.nn.functional as F
+
 from tqdm import tqdm
 from utils import ChatGPTWrapperWithCost, gpt3wrapper_texts_batch_iter, parse_template
 import json
 from functools import partial
 from vllm import LLM 
 from vllm.sampling_params import SamplingParams
-from vllm.utils import random_uuid
 import os
-
+from sentence_transformers import SentenceTransformer
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 MAX_TARGET_LENGTH = 2
 YES_NO_TOK_IDX = [150, 4273]
@@ -449,9 +450,9 @@ class LLMAssigner(Assigner):
         
         self.llm = LLM(
             model=model_name,
-            tensor_parallel_size=tensor_parallel_size,
-            gpu_memory_utilization=gpu_memory_utilization,
-            trust_remote_code=True,
+            # tensor_parallel_size=tensor_parallel_size,
+            # gpu_memory_utilization=gpu_memory_utilization,
+            # trust_remote_code=True,
         )
         self.sampling_params = SamplingParams(
             temperature=temperature
@@ -520,6 +521,7 @@ def assign_descriptions(
     use_multi_assigner: bool = False,
     add_null_description: bool = True,
     progress_bar: bool = False,
+    matmul_optimization: bool = False,
 ) -> np.ndarray:
     """
     Given a list of descriptions and a list of texts, return a matrix of scores, which the i-th row and j-th column is how well the i-th text satisfies the j-th description.
@@ -540,13 +542,48 @@ def assign_descriptions(
         Whether to add a null description when using multi assigner, by default True
     progress_bar : bool, optional
         Whether to show a progress bar, by default False
-
+    matmul_optimization : bool, optional
+        Whether to use matmul optimization, by default False
     Returns
     -------
     np.ndarray
         A matrix of scores, which the i-th row and j-th column is how well the i-th text satisfies the j-th description.
     """
-    if not use_multi_assigner:
+    if matmul_optimization:
+        # goal_text = "Represent the science paragraph fo[r retrieving supporting sentences:" 
+        # goal_desc = "Represent the science sentence for retrieval:"
+        # model = INSTRUCTOR('hkunlp/instructor-xl')
+    
+        # model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        model = SentenceTransformer("jinaai/jina-embeddings-v3", trust_remote_code=True, device=device)
+        text_embeddings = model.encode(
+            texts,
+            task="retrieval.passage",
+            prompt_name="retrieval.passage",
+            truncate_dim=256,
+        )
+        desc_embeddings = model.encode(
+            descriptions,
+            task="retrieval.query",
+            prompt_name="retrieval.query",
+            truncate_dim=256,
+        )
+        text_embeddings = torch.tensor(text_embeddings).to(device) # (n_texts, dim)
+        desc_embeddings = torch.tensor(desc_embeddings).to(device) # (n_desc, dim)
+        # Normalize the embeddings
+        text_embeddings = F.normalize(text_embeddings, p=2, dim=1)
+        desc_embeddings = F.normalize(desc_embeddings, p=2, dim=1)
+        # desc_repetitive = desc_embeddings @ desc_embeddings.T # (n_desc, n_desc)
+        # desc_repetitive = desc_repetitive * torch.tril(torch.ones_like(desc_repetitive),-1) # (n_desc, n_desc)
+        # desc_repetitive = (desc_repetitive.max(dim=-1).values < 0.8).unsqueeze(0) # (1, n_desc)
+        scores = torch.matmul(text_embeddings, desc_embeddings.T).cpu().numpy() # (n_texts, n_desc)
+        # penalized_scores = (torch.tensor(scores).to(device) * desc_repetitive).cpu().numpy()
+        # penalized minium score and push the max score to 1
+        # set max score in the row to 1 and everything else to 0
+        scores = np.where(scores == scores.max(axis=1, keepdims=True), 1, 0)
+        
+        return scores
+    elif not use_multi_assigner:
         assigner_inputs = []
         for text in texts:
             for description in descriptions:
@@ -562,7 +599,6 @@ def assign_descriptions(
 
     # obtain the scores
     scores = []
-
     if not use_multi_assigner:
         obtain_scores_fn = assigner.obtain_single_assigner_scores
     else:
@@ -629,6 +665,7 @@ if __name__ == "__main__":
             use_multi_assigner=False,
             add_null_description=False,
             progress_bar=True,
+            matmul_optimization=True
         )
         print(scores)
 

@@ -272,6 +272,7 @@ def assign(
     use_multi_assigner: bool = False,
     add_null_description: bool = False,
     progress_bar: bool = False,
+    matmul_optimization: bool = False,
 ):
     """
     The assignment stage in the paper, which results in a matrix of indicator variable for each pair of description and text. mainly calls the assign_descriptions function.
@@ -292,6 +293,8 @@ def assign(
         Whether to add a null description for the multi-assigner, by default False. This means "None of the above" will be added to the list of descriptions.
     progress_bar : bool, optional
         Whether to show a progress bar for the assignment process.
+    matmul_optimization : bool, optional
+        Whether to use the matrix multiplication optimization, by default False. This will speed up the assignment process
 
     Returns
     -------
@@ -306,6 +309,7 @@ def assign(
         use_multi_assigner=use_multi_assigner,
         add_null_description=add_null_description,
         progress_bar=progress_bar,
+        matmul_optimization=matmul_optimization,
     )
     text_descriptions_matching = (scores >= 0.5).astype(int)
     return text_descriptions_matching
@@ -375,6 +379,7 @@ def run(
     assigner_name: str = "google/flan-t5-xl",
     assigner_for_proposed_descriptions_template: str = "templates/t5_assigner.txt",
     assigner_for_final_assignment_template: str = "templates/t5_multi_assigner_one_output.txt",
+    assigner_matrix_optimization: bool = False,
     # clusterer arguments
     cluster_algo: str = "maximum_set_coverage",
     cluster_num_clusters: int = None,
@@ -536,6 +541,7 @@ def run(
             use_multi_assigner=False,
             add_null_description=False,
             progress_bar=True,
+            matmul_optimization=assigner_matrix_optimization,
         )
         all_text_descriptions_matching = np.concatenate(
             [all_text_descriptions_matching, new_text_descriptions_matching], axis=1
@@ -655,6 +661,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--assigner_for_final_assignment_template", type=str, default=None
     )
+    parser.add_argument(
+        "--assigner_matrix_optimization", action="store_true"
+    )
 
     parser.add_argument("--cluster_algo", type=str, default="maximum_set_coverage")
     parser.add_argument("--cluster_num_clusters", type=int, default=None)
@@ -722,6 +731,7 @@ if __name__ == "__main__":
         assigner_name=args.assigner_name,
         assigner_for_proposed_descriptions_template=args.assigner_for_proposed_descriptions_template,
         assigner_for_final_assignment_template=args.assigner_for_final_assignment_template,
+        assigner_matrix_optimization=args.assigner_matrix_optimization,
         cluster_algo=args.cluster_algo,
         cluster_num_clusters=args.cluster_num_clusters,
         cluster_overlap_penalty=args.cluster_overlap_penalty,
